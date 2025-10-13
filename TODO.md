@@ -4,9 +4,9 @@ First, we need to combine both datasets into one dataset.
 Then I would like to separate them into 2 datasets, one for static analysis (which will be used by my binary model) and one for dynamic analysis (which will be used by the classification model).
 
 ## Prepare the dataset
-- [ ] Combine both datasets
-- [ ] Remove all rows and all columns with at least one missing value
-- [ ] Remove empty rows and columns from the dataset
+- [x] Combine both datasets
+- [x] Remove all rows and all columns with at least one missing value
+- [x] Remove empty rows and columns from the dataset
 
 Now we need to look at the values in the data to understand which collumns should stay and which should not. 
 I plan to first do my best estimate of what is important and what isn't and later, after I get some results from the models, come back and refine this selection.
