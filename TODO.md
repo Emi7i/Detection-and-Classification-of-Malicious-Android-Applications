@@ -8,13 +8,11 @@ Then I would like to separate them into 2 datasets, one for static analysis (whi
 - [x] Remove all rows and all columns with at least one missing value
 - [x] Remove empty rows and columns from the dataset
 
-Now we need to look at the values in the data to understand which collumns should stay and which should not. 
-I plan to first do my best estimate of what is important and what isn't and later, after I get some results from the models, come back and refine this selection.
+Now we need to look at the values in the data to understand which columns should stay and which should not. 
+I plan to manually select the columns, but plan to come back and refine this selection in the future.
 
-- [ ] Remove columns that we wont be using
 - [ ] Separate the data by static and dynamic analysis 
-
-- [ ] Make a base binary model to test the data
+- [ ] Remove columns that we wont be using
 
 > NOTE: From here on out, all of the steps will be done to both of our datasets.
 
