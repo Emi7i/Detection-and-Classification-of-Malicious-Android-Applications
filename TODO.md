@@ -13,6 +13,7 @@ I plan to manually select the columns, but plan to come back and refine this sel
 
 - [x] Separate the data by static and dynamic analysis
 - [x] Remove columns that we wont be using
+- [ ] Remove colums that have all 0s or 1s
 
 ### Later
 We will try to condense the data by looking for features which don't seem to apply to any or many of the apps. For example, if none of the apps use Permission X, then it is not going to have any predictive value and can be dropped from out dataset. Even if only a few apps have it, it probably won't be enough to be statistically significant.
@@ -28,3 +29,11 @@ I will call the binary (static) model `Fly`, and the classification (dynamic) mo
 
 - For the `Dragon` model, we will first mesure its performance on just on the dynamic dataset, and then add the static dataset to see if the perfomance has changed significantly.
 - For the `Fly` model, I will try to first use just the count of the "dangerous" and "normal" permissions, so we can see how close can it predict the apps on just those values alone (As they could be easily extracted). 
+
+## Fly model (binary, static)
+- [x] Load data
+- [x] Use PCA to refine data
+- [x] Train and test some models
+
+- [ ] Use a different solution instead of PCA
+- [ ] 
