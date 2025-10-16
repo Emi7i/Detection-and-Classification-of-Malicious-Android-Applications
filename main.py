@@ -1,8 +1,8 @@
 from data_processing import refine_data
-from fly_model import run_fly
+from binary_model import run_fly
 
 def main():
-    # refine_data()
+    #refine_data()
     run_fly()
 
 

@@ -61,14 +61,24 @@ def refine_data():
     # 642 rows makes up about 0.8% of all rows.
     combined = combined.dropna(axis=0, how='any') # Drop rows with at least one NaN value
 
-    print(combined.shape)
 
-    static_cols = pd.read_csv(STATIC_HEADERS_FILE, nrows=0).columns.tolist()
-    dynamic_cols = pd.read_csv(DYNAMIC_HEADERS_FILE, nrows=0).columns.tolist()
-    removed_cols = pd.read_csv(REMOVED_HEADERS_FILE, nrows=0).columns.tolist()
+    # Remove columns that have the same value for all rows
+    original_cols = combined.columns.tolist()
+    combined = combined.loc[:, combined.nunique() > 1]
+    deleted_cols = [col for col in original_cols if col not in combined.columns]
+    print(f"Removed {len(deleted_cols)} columns: {deleted_cols}")
+
+
+    static_cols = pd.read_csv(STATIC_HEADERS_FILE).columns.tolist()
+    dynamic_cols = pd.read_csv(DYNAMIC_HEADERS_FILE).columns.tolist()
+    removed_cols = pd.read_csv(REMOVED_HEADERS_FILE).columns.tolist()
+
+    static_cols = [c for c in static_cols if c not in deleted_cols]
+    dynamic_cols = [c for c in dynamic_cols if c not in deleted_cols]
 
     # Remove columns we definatelly won't use
     combined = combined.drop(columns = removed_cols)
+    print(combined.shape)
 
     # Save static data
     static_dataset = combined[static_cols]
