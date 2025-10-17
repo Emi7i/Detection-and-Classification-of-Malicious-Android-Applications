@@ -41,7 +41,7 @@ Start model parameters:
 
 ### First results: 
 Okay so I got:
-```css
+```c
     ======================================================================
     Model                  Accuracy     Precision    Recall       F1-Score
     ----------------------------------------------------------------------
@@ -68,9 +68,9 @@ We could try to condense the data by looking for features which don't seem to ap
 > NOTE: This can actually hurt our model so we need to be careful
 
 #### Results: 
-```css
+```c
     ======================================================================
-    TEST RESULTS with PCA, and no selection of features
+    RESULTS with PCA, and no selection of features
     ======================================================================
     Model                  Accuracy     Precision    Recall       F1-Score
     ----------------------------------------------------------------------
@@ -82,9 +82,9 @@ We could try to condense the data by looking for features which don't seem to ap
     AdaBoost                  91.10%      92.42%      90.58%      91.49%
     Neural Network            96.92%      96.68%      97.52%      97.10%
 ```
-```css
+```c
     ======================================================================
-    TEST RESULTS with feature selection, no PCA
+    RESULTS with feature selection, no PCA
     ======================================================================
     Model                  Accuracy     Precision    Recall       F1-Score
     ----------------------------------------------------------------------
@@ -96,9 +96,9 @@ We could try to condense the data by looking for features which don't seem to ap
     AdaBoost                  94.11%      95.43%      93.33%      94.37%
     Neural Network            97.71%      98.00%      97.65%      97.83%
 ```
-```css
+```c
     ======================================================================
-    TEST RESULTS with both feature selection and PCA
+    RESULTS with both feature selection and PCA
     ======================================================================
     Model                  Accuracy     Precision    Recall       F1-Score
     ----------------------------------------------------------------------
@@ -111,9 +111,9 @@ We could try to condense the data by looking for features which don't seem to ap
     Neural Network            96.94%      96.71%      97.52%      97.12%
 ```
 We need scaling for most of our models, so lets see how scaling affects our best models which dont need it:
-```css
+```c
     ======================================================================
-    TEST RESULTS with feature selection, but no scaling nor PCA 
+    RESULTS with feature selection, but no scaling nor PCA 
     ======================================================================
     Model                    Accuracy     Precision    Recall       F1-Score
     ----------------------------------------------------------------------
@@ -122,5 +122,22 @@ We need scaling for most of our models, so lets see how scaling affects our best
 ```
 > NOTE: I will now focus on using just feature selection with scaling, without PCA. 
 
-- [ ] Tune the models
+- [x] Tune the models using a function
+```c
+    ======================================================================
+    RESULTS AFTER TUNING
+    ======================================================================
+    Model                    Accuracy     Precision    Recall       F1-Score
+    ----------------------------------------------------------------------
+    Logistic Regression       93.79%      95.49%      92.62%      94.03%
+    Random Forest             98.15%      98.32%      98.17%      98.24%
+    XGBoost                   98.34%      98.26%      98.61%      98.44%
+    LightGBM                  98.53%      98.74%      98.47%      98.60%
+    Support Vector Machine    97.45%      97.65%      97.52%      97.58%
+    AdaBoost                  94.64%      95.49%      94.30%      94.89%
+    Neural Network            97.89%      98.44%      97.55%      97.99%
+```
+Looking at the F1-score, the most promising models are `LightGBM`, `XGBoost`, `Random Forest` and `MLP`
 
+I will now try to manually go throught the models and fine-tune them to see if we can get to 99% F1-score
+- [ ] Fine tune the models manually

@@ -1,3 +1,4 @@
+import joblib
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -76,15 +77,18 @@ def run_fly():
     # Apply PCA
     #x_train, x_val, x_test = apply_pca(x, x_train, x_val, x_test)
 
+    # Find the best parameters for each model
+    #models = tune_all_models(x_train, y_train, cv=5, n_jobs=-1, verbose=2)
+
     # Define models
     models = [
-        [LogisticRegression(random_state=RANDOM_STATE, max_iter=10000), "Logistic Regression"],
-        [RandomForestClassifier(n_estimators=100, random_state=RANDOM_STATE), "Random Forest"],
-        [xgb.XGBClassifier(objective="binary:logistic", random_state=RANDOM_STATE), "XGBoost"],
-        [lgb.LGBMClassifier(random_state=RANDOM_STATE), "LightGBM"],
-        [SVM(kernel='rbf', random_state=RANDOM_STATE), "Support Vector Machine"],
-        [AdaBoostClassifier(n_estimators=100, random_state=RANDOM_STATE), "AdaBoost"],
-        [MLPClassifier(hidden_layer_sizes=(100, 50), max_iter=300, random_state=RANDOM_STATE), "Neural Network"],
+        [LogisticRegression(random_state=RANDOM_STATE, max_iter=10000, C=0.1, penalty='l2', solver='lbfgs'), "Logistic Regression"], # Increasing the max_iter above 10000 does not improve the results much
+        [RandomForestClassifier(n_estimators=120, random_state=RANDOM_STATE, max_depth=30, min_samples_split=2, min_samples_leaf=1), "Random Forest"],
+        [xgb.XGBClassifier(objective="binary:logistic", random_state=RANDOM_STATE, colsample_bytree=0.8, learning_rate=0.3, max_depth=9, n_estimators=300), "XGBoost"],
+        [lgb.LGBMClassifier(random_state=RANDOM_STATE, learning_rate=0.3, max_depth=-1, n_estimators=200, num_leaves=100, subsample=0.8), "LightGBM"],
+        [SVM(kernel='rbf', random_state=RANDOM_STATE, C=10, gamma=0.1), "Support Vector Machine"],
+        [AdaBoostClassifier(n_estimators=200, random_state=RANDOM_STATE, learning_rate=1), "AdaBoost"],
+        [MLPClassifier(hidden_layer_sizes=(150, 75), max_iter=300, random_state=RANDOM_STATE, alpha=0.001, activation='relu', learning_rate='constant'), "Neural Network"],
     ]
 
     model_results = []
@@ -106,7 +110,7 @@ def run_fly():
         recall = recall_score(y_val, y_pred) * 100
         f1 = f1_score(y_val, y_pred) * 100
         
-        print("\n--- VALIDATION RESULTS ---")
+        print("\n--- RESULTS ---")
         print(f"Accuracy:  {acc:.2f}%")
         print(f"Precision: {precision:.2f}%")
         print(f"Recall:    {recall:.2f}%")
@@ -117,31 +121,17 @@ def run_fly():
             cm = confusion_matrix(y_val, y_pred)
             disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=['Benign', 'Malware'])
             disp.plot(cmap='Blues')
-            plt.title(f'{name} - Validation Confusion Matrix')
-            plt.show()
-
-        # Test set evaluation
-        y_pred = model.predict(x_test)
-        acc = accuracy_score(y_test, y_pred) * 100
-        precision = precision_score(y_test, y_pred) * 100
-        recall = recall_score(y_test, y_pred) * 100
-        f1 = f1_score(y_test, y_pred) * 100
-
-        print("\n--- TEST RESULTS ---")
-        print(f"Accuracy:  {acc:.2f}%")
-        print(f"Precision: {precision:.2f}%")
-        print(f"Recall:    {recall:.2f}%")
-        print(f"F1-Score:  {f1:.2f}%")
-
-        if SHOW_GRAPS:
-            cm = confusion_matrix(y_test, y_pred)
-            disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=['Benign', 'Malware'])
-            disp.plot(cmap='Blues')
-            plt.title(f'{name} - Test Confusion Matrix')
+            plt.title(f'{name} - Confusion Matrix')
             plt.show()
 
         # Store results
         model_results.append([name, acc, precision, recall, f1])
+
+        # Save the model!!!
+        model_filename = f"models/{name.replace(' ', '_').lower()}_tuned.pkl"
+        os.makedirs('models', exist_ok=True)
+        joblib.dump(model, model_filename)
+        print(f"Model saved to: {model_filename}")
 
     # Print summary comparison
     print("\n" + "="*70)
@@ -215,8 +205,7 @@ def show_data(x, y):
     corr_matrix = data_for_viz[features].corr()
 
     plt.figure(figsize=(16, 14))
-    sns.heatmap(corr_matrix, annot=False, cmap='coolwarm', center=0, 
-                square=True, linewidths=0.5, cbar_kws={"shrink": 0.8})
+    sns.heatmap(corr_matrix, annot=False, cmap='coolwarm', center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.8})
     plt.title('Correlation Heatmap', fontsize=16)
     plt.xticks(rotation=45, ha='right', fontsize=9)
     plt.yticks(fontsize=9)
@@ -228,3 +217,103 @@ def show_data(x, y):
     # total_perm seems to be identical to nr_permissions
     # We could probably drop ACCES_FINE_LOCATION 
     # And we could probably just use dangerous and drop nr_permissions
+
+def tune_all_models(x_train, y_train, cv=5, n_jobs=-1, verbose=1): 
+    # NOTE: This function works only because we do shuffle=True in train_test_split. Using it with the whole datasets REQUIRES shuffling!
+
+    # Define models and their parameters that we are trying to tune
+    model_params = {
+        "Logistic Regression": {
+            'model': LogisticRegression(random_state=RANDOM_STATE, max_iter=10000),
+            'params': {
+                'C': [0.01, 0.1, 1, 10, 100],
+                'penalty': ['l2'],
+                'solver': ['lbfgs', 'saga']
+            }
+        },
+        
+        "Random Forest": {
+            'model': RandomForestClassifier(random_state=RANDOM_STATE),
+            'params': {
+                'n_estimators': [50, 100, 150, 200],
+                'max_depth': [10, 20, 30, None],
+                'min_samples_split': [2, 5, 10],
+                'min_samples_leaf': [1, 2, 4]
+            }
+        },
+        
+        "XGBoost": {
+            'model': xgb.XGBClassifier(objective="binary:logistic", random_state=RANDOM_STATE),
+            'params': {
+                'n_estimators': [100, 200, 300],
+                'max_depth': [3, 5, 7, 9],
+                'learning_rate': [0.01, 0.1, 0.3],
+                'subsample': [0.8, 0.9, 1.0],
+                'colsample_bytree': [0.8, 0.9, 1.0]
+            }
+        },
+        
+        "LightGBM": {
+            'model': lgb.LGBMClassifier(random_state=RANDOM_STATE),
+            'params': {
+                'n_estimators': [100, 200, 300],
+                'max_depth': [3, 5, 7, -1],
+                'learning_rate': [0.01, 0.1, 0.3],
+                'num_leaves': [31, 50, 100],
+                'subsample': [0.8, 0.9, 1.0]
+            }
+        },
+        
+        "Support Vector Machine": {
+            'model': SVM(random_state=RANDOM_STATE),
+            'params': {
+                'C': [0.1, 1, 10, 100],
+                'gamma': ['scale', 'auto', 0.001, 0.01, 0.1],
+                'kernel': ['rbf', 'linear']
+            }
+        },
+        
+        "AdaBoost": {
+            'model': AdaBoostClassifier(random_state=RANDOM_STATE),
+            'params': {
+                'n_estimators': [50, 100, 150, 200],
+                'learning_rate': [0.01, 0.1, 0.5, 1.0]
+            }
+        },
+        
+        "Neural Network": {
+            'model': MLPClassifier(random_state=RANDOM_STATE, max_iter=500),
+            'params': {
+                'hidden_layer_sizes': [(50,), (100,), (100, 50), (100, 100), (150, 75)],
+                'activation': ['relu', 'tanh'],
+                'alpha': [0.0001, 0.001, 0.01],
+                'learning_rate': ['constant', 'adaptive']
+            }
+        }
+    }
+    
+    best_models = {}
+    
+    for name, mp in model_params.items():
+        print(f"\n{'='*70}")
+        print(f"Tuning: {name}")
+        print('='*70)
+        
+        grid_search = GridSearchCV(
+            estimator=mp['model'],
+            param_grid=mp['params'],
+            cv=cv,
+            scoring='f1',
+            n_jobs=n_jobs,
+            verbose=verbose
+        )
+        
+        grid_search.fit(x_train, y_train)
+        
+        print(f"Best parameters: {grid_search.best_params_}")
+        print(f"Best F1 score: {grid_search.best_score_:.4f}")
+        
+        best_models[name] = grid_search.best_estimator_
+    
+    for model in best_models.values():
+        print(model)
