@@ -21,6 +21,9 @@ from sklearn.preprocessing import StandardScaler
 
 from data_processing import PATH_TO_SAVE_STATIC
 
+SHOW_GRAPS = False
+RANDOM_STATE = 42
+
 def run_fly():
     df = pd.read_csv(PATH_TO_SAVE_STATIC)
     
@@ -53,10 +56,10 @@ def run_fly():
     # Meaning we have 52.8% actual malware and 47.2%  benign apps. This is perfect as we almost have 50/50 balance.
 
     # Split the data by 70%/15%/15% 
-    x_train, validation_x, y_train, validation_y = train_test_split(x, y, test_size=0.3, random_state=42, stratify=y, shuffle=True) # IMPORTANT: We need to shuffle the data
+    x_train, validation_x, y_train, validation_y = train_test_split(x, y, test_size=0.3, random_state=RANDOM_STATE, stratify=y, shuffle=True) # IMPORTANT: We need to shuffle the data
 
     # Split the remaining 30% into 15% for validation and 15% for testing
-    x_val, x_test, y_val, y_test = train_test_split(validation_x, validation_y, test_size=0.5, random_state=42, stratify=validation_y)
+    x_val, x_test, y_val, y_test = train_test_split(validation_x, validation_y, test_size=0.5, random_state=RANDOM_STATE, stratify=validation_y)
 
     binary_cols = [c for c in x.columns if set(x[c].unique()) <= {0, 1}]
     numeric_cols = [c for c in x.columns if c not in binary_cols]
@@ -67,26 +70,21 @@ def run_fly():
     x_val[numeric_cols] = scaler.transform(x_val[numeric_cols])
     x_test[numeric_cols] = scaler.transform(x_test[numeric_cols])
 
-    # # Apply PCA
-    # pca = PCA(n_components=0.98, random_state=42)
-    # x_train = pca.fit_transform(x_train)
-    # x_val = pca.transform(x_val)
-    # x_test = pca.transform(x_test)
+    # Feature selection - Remove useless columns
+    x_train, x_val, x_test = find_useful_columns(x_train, x_val, x_test, binary_cols, numeric_cols)
 
-    # print(f"Original features: {x.shape[1]}")
-    # print(f"After PCA: {x_train.shape[1]}")
-    # print(f"Variance explained: {pca.explained_variance_ratio_.sum():.2%}")
+    # Apply PCA
+    #x_train, x_val, x_test = apply_pca(x, x_train, x_val, x_test)
 
     # Define models
     models = [
-        # [LogisticRegression(random_state=42, max_iter=10000), "Logistic Regression"],
-        # [RandomForestClassifier(n_estimators=100, random_state=42), "Random Forest"],
-        [xgb.XGBClassifier(objective="binary:logistic", random_state=42), "XGBoost"],
-        [lgb.LGBMClassifier(random_state=42), "LightGBM"]
-        
-        # [SVM(kernel='rbf', random_state=42), "Support Vector Machine"],
-        # [AdaBoostClassifier(n_estimators=100, random_state=42), "AdaBoost"],
-        # [MLPClassifier(hidden_layer_sizes=(100, 50), max_iter=300, random_state=42), "Neural Network"],
+        [LogisticRegression(random_state=RANDOM_STATE, max_iter=10000), "Logistic Regression"],
+        [RandomForestClassifier(n_estimators=100, random_state=RANDOM_STATE), "Random Forest"],
+        [xgb.XGBClassifier(objective="binary:logistic", random_state=RANDOM_STATE), "XGBoost"],
+        [lgb.LGBMClassifier(random_state=RANDOM_STATE), "LightGBM"],
+        [SVM(kernel='rbf', random_state=RANDOM_STATE), "Support Vector Machine"],
+        [AdaBoostClassifier(n_estimators=100, random_state=RANDOM_STATE), "AdaBoost"],
+        [MLPClassifier(hidden_layer_sizes=(100, 50), max_iter=300, random_state=RANDOM_STATE), "Neural Network"],
     ]
 
     model_results = []
@@ -108,18 +106,40 @@ def run_fly():
         recall = recall_score(y_val, y_pred) * 100
         f1 = f1_score(y_val, y_pred) * 100
         
+        print("\n--- VALIDATION RESULTS ---")
         print(f"Accuracy:  {acc:.2f}%")
         print(f"Precision: {precision:.2f}%")
         print(f"Recall:    {recall:.2f}%")
         print(f"F1-Score:  {f1:.2f}%")
         
         # Confusion matrix
-        cm = confusion_matrix(y_val, y_pred)
-        disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=['Benign', 'Malware'])
-        disp.plot(cmap='Blues')
-        plt.title(f'{name} - Confusion Matrix')
-        plt.show()
-        
+        if SHOW_GRAPS:
+            cm = confusion_matrix(y_val, y_pred)
+            disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=['Benign', 'Malware'])
+            disp.plot(cmap='Blues')
+            plt.title(f'{name} - Validation Confusion Matrix')
+            plt.show()
+
+        # Test set evaluation
+        y_pred = model.predict(x_test)
+        acc = accuracy_score(y_test, y_pred) * 100
+        precision = precision_score(y_test, y_pred) * 100
+        recall = recall_score(y_test, y_pred) * 100
+        f1 = f1_score(y_test, y_pred) * 100
+
+        print("\n--- TEST RESULTS ---")
+        print(f"Accuracy:  {acc:.2f}%")
+        print(f"Precision: {precision:.2f}%")
+        print(f"Recall:    {recall:.2f}%")
+        print(f"F1-Score:  {f1:.2f}%")
+
+        if SHOW_GRAPS:
+            cm = confusion_matrix(y_test, y_pred)
+            disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=['Benign', 'Malware'])
+            disp.plot(cmap='Blues')
+            plt.title(f'{name} - Test Confusion Matrix')
+            plt.show()
+
         # Store results
         model_results.append([name, acc, precision, recall, f1])
 
@@ -131,6 +151,50 @@ def run_fly():
     print("-"*70)
     for name, acc, prec, rec, f1 in model_results:
         print(f"{name:<20} {acc:>10.2f}% {prec:>10.2f}% {rec:>10.2f}% {f1:>10.2f}%")
+
+def find_useful_columns(x_train, x_val, x_test, binary_cols, numeric_cols):
+    NUM_APPS = x_train.shape[0]
+    MARGIN_OF_ERROR = 100 / (NUM_APPS ** 0.5)
+    FEATURE_THRESHOLD = int((MARGIN_OF_ERROR / 100) * NUM_APPS)
+
+    print(f"Training set size: {NUM_APPS} apps")
+    print(f"Feature threshold: {FEATURE_THRESHOLD} apps ({MARGIN_OF_ERROR:.2f}% margin of error)")
+
+    cols_to_drop = []
+
+    # Check binary cols
+    for col in binary_cols:
+        count_ones = x_train[col].sum()
+        if count_ones < FEATURE_THRESHOLD or count_ones > (NUM_APPS - FEATURE_THRESHOLD):
+            cols_to_drop.append(col)
+
+    # Check numeric features - drop if almost no variance
+    for col in numeric_cols:
+        if x_train[col].std() < 0.1:  # NOTE: Increasing this value did not prove to affect the results
+            cols_to_drop.append(col)
+
+    print(f"Binary cols dropped: {len([c for c in cols_to_drop if c in binary_cols])}")
+    print(f"Numeric cols dropped: {len([c for c in cols_to_drop if c in numeric_cols])}")
+    print(f"Total num of features dropped: {len(cols_to_drop)}")
+
+    # Drop from all sets
+    x_train = x_train.drop(columns=cols_to_drop)
+    x_val = x_val.drop(columns=cols_to_drop)
+    x_test = x_test.drop(columns=cols_to_drop)
+
+    print(f"New shape: {x_train.shape}")
+    return x_train, x_val, x_test
+
+def apply_pca(x, x_train, x_val, x_test):
+    pca = PCA(n_components=0.95, random_state=RANDOM_STATE)
+    x_train = pca.fit_transform(x_train)
+    x_val = pca.transform(x_val)
+    x_test = pca.transform(x_test)
+
+    print(f"Original features: {x.shape[1]}")
+    print(f"After PCA: {x_train.shape[1]}")
+    print(f"Variance explained: {pca.explained_variance_ratio_.sum():.2%}")
+    return x_train, x_val, x_test
 
 
 def show_data(x, y):

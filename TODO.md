@@ -13,7 +13,7 @@ I plan to manually select the columns, but plan to come back and refine this sel
 
 - [x] Separate the data by static and dynamic analysis
 - [x] Remove columns that we wont be using
-- [ ] Remove colums that have all 0s or 1s
+- [x] Remove colums that have all 0s or 1s
 
 ## Models
 > Lets name the models so we can refer to them more easily
@@ -43,7 +43,7 @@ Start model parameters:
 Okay so I got:
 ```css
     ======================================================================
-    Model              Accuracy     Precision    Recall       F1-Score
+    Model                  Accuracy     Precision    Recall       F1-Score
     ----------------------------------------------------------------------
     Logistic Regression       93.26%      94.91%      92.18%      93.53%
     Random Forest             97.32%      97.58%      97.34%      97.46%
@@ -58,11 +58,69 @@ Meaning that our models are pretty good!
 However, I realized that some of our data does not correlate to the `Malware` field at all!
 I need to go back and remove all of the rows and cols which have all 0s or 1s. 
 
+- [x] Test models
+
 ### Testing
 We could try to condense the data by looking for features which don't seem to apply to any or many of the apps. For example, if none of the apps use Permission X, then it is not going to have any predictive value and can be dropped from out dataset. Even if only a few apps have it, it probably won't be enough to be statistically significant.
 
-- [ ] Remove columns that not many apps have the data for 
+- [x] Remove columns that not many apps have the data for 
 
 > NOTE: This can actually hurt our model so we need to be careful
 
-I plan to try this out with and without PCA to see how the models perform. 
+#### Results: 
+```css
+    ======================================================================
+    TEST RESULTS with PCA, and no selection of features
+    ======================================================================
+    Model                  Accuracy     Precision    Recall       F1-Score
+    ----------------------------------------------------------------------
+    Logistic Regression       91.41%      92.33%      91.33%      91.83%
+    Random Forest             97.26%      97.67%      97.13%      97.40%
+    XGBoost                   97.36%      97.66%      97.34%      97.50%
+    LightGBM                  96.64%      96.97%      96.65%      96.81%
+    Support Vector Machine    94.13%      95.90%      92.85%      94.35%
+    AdaBoost                  91.10%      92.42%      90.58%      91.49%
+    Neural Network            96.92%      96.68%      97.52%      97.10%
+```
+```css
+    ======================================================================
+    TEST RESULTS with feature selection, no PCA
+    ======================================================================
+    Model                  Accuracy     Precision    Recall       F1-Score
+    ----------------------------------------------------------------------
+    Logistic Regression       93.94%      95.57%      92.84%      94.18%
+    Random Forest             97.95%      98.34%      97.76%      98.05%
+    XGBoost                   97.96%      98.44%      97.68%      98.06%
+    LightGBM                  97.53%      97.89%      97.44%      97.66%
+    Support Vector Machine    95.76%      96.87%      95.04%      95.95%
+    AdaBoost                  94.11%      95.43%      93.33%      94.37%
+    Neural Network            97.71%      98.00%      97.65%      97.83%
+```
+```css
+    ======================================================================
+    TEST RESULTS with both feature selection and PCA
+    ======================================================================
+    Model                  Accuracy     Precision    Recall       F1-Score
+    ----------------------------------------------------------------------
+    Logistic Regression       91.42%      92.36%      91.32%      91.84%
+    Random Forest             97.16%      97.52%      97.10%      97.31%
+    XGBoost                   97.33%      97.67%      97.26%      97.47%
+    LightGBM                  96.69%      97.07%      96.65%      96.86%
+    Support Vector Machine    94.05%      95.77%      92.84%      94.28%
+    AdaBoost                  90.97%      92.53%      90.19%      91.35%
+    Neural Network            96.94%      96.71%      97.52%      97.12%
+```
+We need scaling for most of our models, so lets see how scaling affects our best models which dont need it:
+```css
+    ======================================================================
+    TEST RESULTS with feature selection, but no scaling nor PCA 
+    ======================================================================
+    Model                    Accuracy     Precision    Recall       F1-Score
+    ----------------------------------------------------------------------
+    XGBoost                   97.96%      98.44%      97.68%      98.06%
+    LightGBM                  97.58%      97.95%      97.45%      97.70%
+```
+> NOTE: I will now focus on using just feature selection with scaling, without PCA. 
+
+- [ ] Tune the models
+
