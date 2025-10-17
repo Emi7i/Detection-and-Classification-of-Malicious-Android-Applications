@@ -25,6 +25,16 @@ from data_processing import PATH_TO_SAVE_STATIC
 SHOW_GRAPS = False
 RANDOM_STATE = 42
 
+model_files = {
+    'Logistic Regression': 'models/logistic_regression_tuned.pkl',
+    'Random Forest': 'models/random_forest_tuned.pkl',
+    'XGBoost': 'models/xgboost_tuned.pkl',
+    'LightGBM': 'models/lightgbm_tuned.pkl',
+    'SVM': 'models/support_vector_machine_tuned.pkl',
+    'AdaBoost': 'models/adaboost_tuned.pkl',
+    'Neural Network': 'models/neural_network_tuned.pkl'
+}
+
 def run_fly():
     df = pd.read_csv(PATH_TO_SAVE_STATIC)
     
@@ -32,18 +42,6 @@ def run_fly():
     y = df['Malware']
 
     #show_data(x, y)
-    #Correlation with Malware:
-    # READ_PHONE_STATE                            0.659059
-    # dangerous                                   0.560881
-    # nr_permissions                              0.537815
-    # ACCESS_WIFI_STATE                           0.525105
-    # normal                                      0.492861
-    #                                             ...   
-    # REQUEST_COMPANION_USE_DATA_IN_BACKGROUND         NaN
-    # SMS_FINANCIAL_TRANSACTIONS                       NaN
-    # START_VIEW_PERMISSION_USAGE                      NaN
-    # WRITE_VOICEMAIL                                  NaN
-    # NrContactedIps                                   NaN
 
     x = x.drop(['total_perm', 'nr_permissions'], axis=1)
 
@@ -75,11 +73,75 @@ def run_fly():
     x_train, x_val, x_test = find_useful_columns(x_train, x_val, x_test, binary_cols, numeric_cols)
 
     # Apply PCA
-    #x_train, x_val, x_test = apply_pca(x, x_train, x_val, x_test)
+    # x_train, x_val, x_test = apply_pca(x, x_train, x_val, x_test)
 
     # Find the best parameters for each model
-    #models = tune_all_models(x_train, y_train, cv=5, n_jobs=-1, verbose=2)
+    # models = tune_all_models(x_train, y_train, cv=5, n_jobs=-1, verbose=2)
+    
+    # Train and evaluate models
+    # model_results = train_and_evaluate_models(x_train, y_train, x_val, y_val)
 
+    # Load and evaluate pre-tuned models
+    model_results = load_and_evaluate_model(x_val, y_val)
+
+    # Print summary comparison
+    print("\n" + "="*70)
+    print("MODEL COMPARISON")
+    print("="*70)
+    print(f"{'Model':<24} {'Accuracy':<12} {'Precision':<12} {'Recall':<12} {'F1-Score':<12}")
+    print("-"*70)
+    for name, acc, prec, rec, f1 in model_results:
+        print(f"{name:<20} {acc:>10.2f}% {prec:>10.2f}% {rec:>10.2f}% {f1:>10.2f}%")
+    
+
+def load_and_evaluate_model(x_val, y_val):    
+    # Load models
+    models = [
+        [joblib.load('models/logistic_regression_tuned.pkl'), "Logistic Regression"],
+        [joblib.load('models/random_forest_tuned.pkl'), "Random Forest"],
+        [joblib.load('models/xgboost_tuned.pkl'), "XGBoost"],
+        [joblib.load('models/lightgbm_tuned.pkl'), "LightGBM"],
+        [joblib.load('models/support_vector_machine_tuned.pkl'), "Support Vector Machine"],
+        [joblib.load('models/adaboost_tuned.pkl'), "AdaBoost"],
+        [joblib.load('models/neural_network_tuned.pkl'), "Neural Network"],
+    ]
+
+    model_results = []
+
+    for model, name in models:
+        print(f"\n{'='*50}")
+        print(f"Training: {name}")
+        print('='*50)
+        
+        # Predict on validation set
+        y_pred = model.predict(x_val)
+        
+        # Calculate metrics
+        acc = accuracy_score(y_val, y_pred) * 100
+        precision = precision_score(y_val, y_pred) * 100
+        recall = recall_score(y_val, y_pred) * 100
+        f1 = f1_score(y_val, y_pred) * 100
+        
+        print("\n--- RESULTS ---")
+        print(f"Accuracy:  {acc:.2f}%")
+        print(f"Precision: {precision:.2f}%")
+        print(f"Recall:    {recall:.2f}%")
+        print(f"F1-Score:  {f1:.2f}%")
+        
+        # Confusion matrix
+        if SHOW_GRAPS:
+            cm = confusion_matrix(y_val, y_pred)
+            disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=['Benign', 'Malware'])
+            disp.plot(cmap='Blues')
+            plt.title(f'{name} - Confusion Matrix')
+            plt.show()
+
+        # Store results
+        model_results.append([name, acc, precision, recall, f1])
+
+    return model_results
+
+def train_and_evaluate_models(x_train, y_train, x_val, y_val):
     # Define models
     models = [
         [LogisticRegression(random_state=RANDOM_STATE, max_iter=10000, C=0.1, penalty='l2', solver='lbfgs'), "Logistic Regression"], # Increasing the max_iter above 10000 does not improve the results much
@@ -133,14 +195,7 @@ def run_fly():
         joblib.dump(model, model_filename)
         print(f"Model saved to: {model_filename}")
 
-    # Print summary comparison
-    print("\n" + "="*70)
-    print("MODEL COMPARISON")
-    print("="*70)
-    print(f"{'Model':<24} {'Accuracy':<12} {'Precision':<12} {'Recall':<12} {'F1-Score':<12}")
-    print("-"*70)
-    for name, acc, prec, rec, f1 in model_results:
-        print(f"{name:<20} {acc:>10.2f}% {prec:>10.2f}% {rec:>10.2f}% {f1:>10.2f}%")
+    return model_results
 
 def find_useful_columns(x_train, x_val, x_test, binary_cols, numeric_cols):
     NUM_APPS = x_train.shape[0]

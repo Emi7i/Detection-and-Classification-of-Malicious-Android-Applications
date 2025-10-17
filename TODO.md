@@ -56,6 +56,20 @@ Okay so I got:
 
 Meaning that our models are pretty good!
 However, I realized that some of our data does not correlate to the `Malware` field at all!
+```c
+    Correlation with Malware:
+        READ_PHONE_STATE                            0.659059
+        dangerous                                   0.560881
+        nr_permissions                              0.537815
+        ACCESS_WIFI_STATE                           0.525105
+        normal                                      0.492861
+                                                    ...   
+        REQUEST_COMPANION_USE_DATA_IN_BACKGROUND         NaN
+        SMS_FINANCIAL_TRANSACTIONS                       NaN
+        START_VIEW_PERMISSION_USAGE                      NaN
+        WRITE_VOICEMAIL                                  NaN
+        NrContactedIps                                   NaN
+```
 I need to go back and remove all of the rows and cols which have all 0s or 1s. 
 
 - [x] Test models
