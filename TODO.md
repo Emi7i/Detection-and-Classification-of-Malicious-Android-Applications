@@ -88,13 +88,13 @@ We could try to condense the data by looking for features which don't seem to ap
     ======================================================================
     Model                  Accuracy     Precision    Recall       F1-Score
     ----------------------------------------------------------------------
-    Logistic Regression       91.41%      92.33%      91.33%      91.83%
-    Random Forest             97.26%      97.67%      97.13%      97.40%
-    XGBoost                   97.36%      97.66%      97.34%      97.50%
-    LightGBM                  96.64%      96.97%      96.65%      96.81%
-    Support Vector Machine    94.13%      95.90%      92.85%      94.35%
-    AdaBoost                  91.10%      92.42%      90.58%      91.49%
-    Neural Network            96.92%      96.68%      97.52%      97.10%
+    Logistic Regression       91.48%      92.68%      91.07%      91.87%
+    Random Forest             97.12%      97.34%      97.21%      97.27%
+    XGBoost                   97.22%      97.22%      97.52%      97.37%
+    LightGBM                  96.69%      96.97%      96.75%      96.86%
+    Support Vector Machine    94.26%      96.10%      92.90%      94.47%
+    AdaBoost                  91.84%      92.92%      91.51%      92.21%
+    Neural Network            96.70%      96.44%      97.34%      96.89%
 ```
 ```c
     ======================================================================
@@ -102,13 +102,13 @@ We could try to condense the data by looking for features which don't seem to ap
     ======================================================================
     Model                  Accuracy     Precision    Recall       F1-Score
     ----------------------------------------------------------------------
-    Logistic Regression       93.94%      95.57%      92.84%      94.18%
-    Random Forest             97.95%      98.34%      97.76%      98.05%
-    XGBoost                   97.96%      98.44%      97.68%      98.06%
-    LightGBM                  97.53%      97.89%      97.44%      97.66%
-    Support Vector Machine    95.76%      96.87%      95.04%      95.95%
-    AdaBoost                  94.11%      95.43%      93.33%      94.37%
-    Neural Network            97.71%      98.00%      97.65%      97.83%
+    Logistic Regression       93.92%      95.53%      92.83%      94.16%
+    Random Forest             98.13%      98.21%      98.25%      98.23%
+    XGBoost                   97.79%      97.97%      97.85%      97.91%
+    LightGBM                  97.63%      97.92%      97.58%      97.75%
+    Support Vector Machine    95.88%      97.00%      95.14%      96.06%
+    AdaBoost                  94.09%      95.24%      93.47%      94.35%
+    Neural Network            97.80%      98.13%      97.70%      97.91%
 ```
 ```c
     ======================================================================
@@ -116,13 +116,13 @@ We could try to condense the data by looking for features which don't seem to ap
     ======================================================================
     Model                  Accuracy     Precision    Recall       F1-Score
     ----------------------------------------------------------------------
-    Logistic Regression       91.42%      92.36%      91.32%      91.84%
-    Random Forest             97.16%      97.52%      97.10%      97.31%
-    XGBoost                   97.33%      97.67%      97.26%      97.47%
-    LightGBM                  96.69%      97.07%      96.65%      96.86%
-    Support Vector Machine    94.05%      95.77%      92.84%      94.28%
-    AdaBoost                  90.97%      92.53%      90.19%      91.35%
-    Neural Network            96.94%      96.71%      97.52%      97.12%
+    Logistic Regression       91.46%      92.64%      91.06%      91.84%
+    Random Forest             97.07%      97.21%      97.24%      97.23%
+    XGBoost                   97.38%      97.66%      97.37%      97.52%
+    LightGBM                  96.53%      96.78%      96.65%      96.72%
+    Support Vector Machine    94.22%      95.97%      92.97%      94.45%
+    AdaBoost                  91.71%      92.95%      91.22%      92.08%
+    Neural Network            96.95%      96.52%      97.75%      97.13%
 ```
 We need scaling for most of our models, so lets see how scaling affects our best models which dont need it:
 ```c
@@ -131,8 +131,8 @@ We need scaling for most of our models, so lets see how scaling affects our best
     ======================================================================
     Model                    Accuracy     Precision    Recall       F1-Score
     ----------------------------------------------------------------------
-    XGBoost                   97.96%      98.44%      97.68%      98.06%
-    LightGBM                  97.58%      97.95%      97.45%      97.70%
+    XGBoost                   97.79%      97.97%      97.85%      97.91%
+    LightGBM                  97.59%      97.81%      97.62%      97.71%
 ```
 > NOTE: I will now focus on using just feature selection with scaling, without PCA. 
 
@@ -153,17 +153,17 @@ We need scaling for most of our models, so lets see how scaling affects our best
 ```
 Looking at the F1-score, the most promising models are `LightGBM`, `XGBoost`, `Random Forest` and `MLP`
 
-The problem I noticed with SVM, is that even if I try fitting it, it takes a long time.
+The problem I noticed with SVM, is that even if I try predicting the values, it takes a long time.
 
 I will now try to manually go throught the models and fine-tune them to see if we can get to 99% F1-score
 - [x] Fine tune the models manually
 
 ### Models after fine-tuning:
 ```python
-        [RandomForestClassifier(n_estimators=120, random_state=RANDOM_STATE, max_depth=30, min_samples_split=2, min_samples_leaf=1), "Random Forest"],
-        [xgb.XGBClassifier(objective="binary:logistic", random_state=RANDOM_STATE, colsample_bytree=0.3, learning_rate=0.3, max_depth=9, n_estimators=300), "XGBoost"],
-        [lgb.LGBMClassifier(random_state=RANDOM_STATE, learning_rate=0.3, max_depth=-1, n_estimators=400, num_leaves=100), "LightGBM"],
-        [MLPClassifier(hidden_layer_sizes=(200, 150, 75), max_iter=100, random_state=RANDOM_STATE, alpha=0.00085, activation='relu', early_stopping=True), "Neural Network"]
+    [RandomForestClassifier(n_estimators=120, random_state=RANDOM_STATE, max_depth=30, min_samples_split=2, min_samples_leaf=1), "Random Forest"],
+    [xgb.XGBClassifier(objective="binary:logistic", random_state=RANDOM_STATE, colsample_bytree=0.3, learning_rate=0.3, max_depth=9, n_estimators=300), "XGBoost"],
+    [lgb.LGBMClassifier(random_state=RANDOM_STATE, learning_rate=0.3, max_depth=-1, n_estimators=400, num_leaves=100), "LightGBM"],
+    [MLPClassifier(hidden_layer_sizes=(200, 150, 75), max_iter=100, random_state=RANDOM_STATE, alpha=0.00085, activation='relu', early_stopping=True), "Neural Network"]
 ```
 
 #### Results: 
@@ -181,7 +181,7 @@ I will now try to manually go throught the models and fine-tune them to see if w
 
 > Meaning LightGBM wins!
 
-### Testng the final model:
+### Testing the final model:
 ```c
     ======================================================================
     Model                  Accuracy     Precision    Recall       F1-Score
