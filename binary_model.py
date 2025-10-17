@@ -1,5 +1,4 @@
 import joblib
-import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -10,10 +9,9 @@ from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDis
 import seaborn as sns
 import xgboost as xgb
 from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, AdaBoostClassifier
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 import lightgbm as lgb
 import xgboost as xgb
-from sklearn.gaussian_process import GaussianProcessClassifier
 from sklearn.gaussian_process.kernels import RBF
 from sklearn.neural_network import MLPClassifier
 from sklearn.linear_model import LogisticRegression
@@ -76,13 +74,13 @@ def run_fly():
     # x_train, x_val, x_test = apply_pca(x, x_train, x_val, x_test)
 
     # Find the best parameters for each model
-    # models = tune_all_models(x_train, y_train, cv=5, n_jobs=-1, verbose=2)
+    # tune_all_models(x_train, y_train, cv=5, n_jobs=-1, verbose=2)
     
     # Train and evaluate models
     # model_results = train_and_evaluate_models(x_train, y_train, x_val, y_val)
 
     # Load and evaluate pre-tuned models
-    model_results = load_and_evaluate_model(x_val, y_val)
+    model_results = load_and_test_models(x_test=x_test, y_test=y_test, SHOW_GRAPS=True)
 
     # Print summary comparison
     print("\n" + "="*70)
@@ -94,16 +92,16 @@ def run_fly():
         print(f"{name:<20} {acc:>10.2f}% {prec:>10.2f}% {rec:>10.2f}% {f1:>10.2f}%")
     
 
-def load_and_evaluate_model(x_val, y_val):    
+def load_and_test_models(x_test, y_test, SHOW_GRAPS=True):    
     # Load models
     models = [
-        [joblib.load('models/logistic_regression_tuned.pkl'), "Logistic Regression"],
-        [joblib.load('models/random_forest_tuned.pkl'), "Random Forest"],
-        [joblib.load('models/xgboost_tuned.pkl'), "XGBoost"],
+        #[joblib.load('models/logistic_regression_tuned.pkl'), "Logistic Regression"],
+        #[joblib.load('models/random_forest_tuned.pkl'), "Random Forest"],
+        #[joblib.load('models/xgboost_tuned.pkl'), "XGBoost"],
         [joblib.load('models/lightgbm_tuned.pkl'), "LightGBM"],
-        [joblib.load('models/support_vector_machine_tuned.pkl'), "Support Vector Machine"],
-        [joblib.load('models/adaboost_tuned.pkl'), "AdaBoost"],
-        [joblib.load('models/neural_network_tuned.pkl'), "Neural Network"],
+        #[joblib.load('models/support_vector_machine_tuned.pkl'), "Support Vector Machine"],
+        #[joblib.load('models/adaboost_tuned.pkl'), "AdaBoost"],
+        #[joblib.load('models/neural_network_tuned.pkl'), "Neural Network"],
     ]
 
     model_results = []
@@ -114,14 +112,14 @@ def load_and_evaluate_model(x_val, y_val):
         print('='*50)
         
         # Predict on validation set
-        y_pred = model.predict(x_val)
+        y_pred = model.predict(x_test)
         
         # Calculate metrics
-        acc = accuracy_score(y_val, y_pred) * 100
-        precision = precision_score(y_val, y_pred) * 100
-        recall = recall_score(y_val, y_pred) * 100
-        f1 = f1_score(y_val, y_pred) * 100
-        
+        acc = accuracy_score(y_test, y_pred) * 100
+        precision = precision_score(y_test, y_pred) * 100
+        recall = recall_score(y_test, y_pred) * 100
+        f1 = f1_score(y_test, y_pred) * 100
+
         print("\n--- RESULTS ---")
         print(f"Accuracy:  {acc:.2f}%")
         print(f"Precision: {precision:.2f}%")
@@ -130,7 +128,7 @@ def load_and_evaluate_model(x_val, y_val):
         
         # Confusion matrix
         if SHOW_GRAPS:
-            cm = confusion_matrix(y_val, y_pred)
+            cm = confusion_matrix(y_test, y_pred)
             disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=['Benign', 'Malware'])
             disp.plot(cmap='Blues')
             plt.title(f'{name} - Confusion Matrix')
@@ -146,11 +144,11 @@ def train_and_evaluate_models(x_train, y_train, x_val, y_val):
     models = [
         [LogisticRegression(random_state=RANDOM_STATE, max_iter=10000, C=0.1, penalty='l2', solver='lbfgs'), "Logistic Regression"], # Increasing the max_iter above 10000 does not improve the results much
         [RandomForestClassifier(n_estimators=120, random_state=RANDOM_STATE, max_depth=30, min_samples_split=2, min_samples_leaf=1), "Random Forest"],
-        [xgb.XGBClassifier(objective="binary:logistic", random_state=RANDOM_STATE, colsample_bytree=0.8, learning_rate=0.3, max_depth=9, n_estimators=300), "XGBoost"],
-        [lgb.LGBMClassifier(random_state=RANDOM_STATE, learning_rate=0.3, max_depth=-1, n_estimators=200, num_leaves=100, subsample=0.8), "LightGBM"],
+        [xgb.XGBClassifier(objective="binary:logistic", random_state=RANDOM_STATE, colsample_bytree=0.3, learning_rate=0.3, max_depth=9, n_estimators=300), "XGBoost"],
+        [lgb.LGBMClassifier(random_state=RANDOM_STATE, learning_rate=0.3, max_depth=-1, n_estimators=400, num_leaves=100), "LightGBM"],
         [SVM(kernel='rbf', random_state=RANDOM_STATE, C=10, gamma=0.1), "Support Vector Machine"],
         [AdaBoostClassifier(n_estimators=200, random_state=RANDOM_STATE, learning_rate=1), "AdaBoost"],
-        [MLPClassifier(hidden_layer_sizes=(150, 75), max_iter=300, random_state=RANDOM_STATE, alpha=0.001, activation='relu', learning_rate='constant'), "Neural Network"],
+        [MLPClassifier(hidden_layer_sizes=(200, 150, 75), max_iter=100, random_state=RANDOM_STATE, alpha=0.00085, activation='relu', early_stopping=True), "Neural Network"],
     ]
 
     model_results = []
@@ -159,6 +157,7 @@ def train_and_evaluate_models(x_train, y_train, x_val, y_val):
         print(f"\n{'='*50}")
         print(f"Training: {name}")
         print('='*50)
+        print(model.get_params())
         
         # Train model
         model.fit(x_train, y_train)
@@ -336,13 +335,16 @@ def tune_all_models(x_train, y_train, cv=5, n_jobs=-1, verbose=1):
             }
         },
         
-        "Neural Network": {
-            'model': MLPClassifier(random_state=RANDOM_STATE, max_iter=500),
+       "Neural Network": {
+            'model': MLPClassifier(random_state=RANDOM_STATE, max_iter=1000, early_stopping=True),
             'params': {
-                'hidden_layer_sizes': [(50,), (100,), (100, 50), (100, 100), (150, 75)],
+                'hidden_layer_sizes': [
+                    (100,), (150,), (200,),                    # Single layer
+                    (150, 75), (200, 100), (256, 128),         # Two layers
+                    (150, 100, 50), (200, 150, 75)             # Three layers
+                ],
                 'activation': ['relu', 'tanh'],
                 'alpha': [0.0001, 0.001, 0.01],
-                'learning_rate': ['constant', 'adaptive']
             }
         }
     }

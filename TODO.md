@@ -153,5 +153,39 @@ We need scaling for most of our models, so lets see how scaling affects our best
 ```
 Looking at the F1-score, the most promising models are `LightGBM`, `XGBoost`, `Random Forest` and `MLP`
 
+The problem I noticed with SVM, is that even if I try fitting it, it takes a long time.
+
 I will now try to manually go throught the models and fine-tune them to see if we can get to 99% F1-score
-- [ ] Fine tune the models manually
+- [x] Fine tune the models manually
+
+### Models after fine-tuning:
+```python
+        [RandomForestClassifier(n_estimators=120, random_state=RANDOM_STATE, max_depth=30, min_samples_split=2, min_samples_leaf=1), "Random Forest"],
+        [xgb.XGBClassifier(objective="binary:logistic", random_state=RANDOM_STATE, colsample_bytree=0.3, learning_rate=0.3, max_depth=9, n_estimators=300), "XGBoost"],
+        [lgb.LGBMClassifier(random_state=RANDOM_STATE, learning_rate=0.3, max_depth=-1, n_estimators=400, num_leaves=100), "LightGBM"],
+        [MLPClassifier(hidden_layer_sizes=(200, 150, 75), max_iter=100, random_state=RANDOM_STATE, alpha=0.00085, activation='relu', early_stopping=True), "Neural Network"]
+```
+
+#### Results: 
+```c
+    ======================================================================
+    MODEL COMPARISON
+    ======================================================================
+    Model                  Accuracy     Precision    Recall       F1-Score
+    ----------------------------------------------------------------------
+    Random Forest             98.15%      98.32%      98.17%      98.24%
+    XGBoost                   98.50%      98.58%      98.58%      98.58%
+    LightGBM                  98.61%      98.77%      98.60%      98.68%
+    Neural Network            97.98%      98.25%      97.93%      98.09%
+```
+
+> Meaning LightGBM wins!
+
+### Testng the final model:
+```c
+    ======================================================================
+    Model                  Accuracy     Precision    Recall       F1-Score
+    ----------------------------------------------------------------------
+    LightGBM                  98.37%      98.82%      98.09%      98.45%
+```
+[Confusion Matrix](Binary_res.png)
