@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
+import numpy as np
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.svm import SVC as SVM
 from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay, precision_score, recall_score, f1_score
@@ -12,7 +13,6 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 import lightgbm as lgb
 import xgboost as xgb
-from sklearn.gaussian_process.kernels import RBF
 from sklearn.neural_network import MLPClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.decomposition import PCA
@@ -22,6 +22,7 @@ from data_processing import PATH_TO_SAVE_STATIC
 
 SHOW_GRAPS = False
 RANDOM_STATE = 42
+SHOW_DATA = False  
 
 model_files = {
     'Logistic Regression': 'models/Fly/logistic_regression_tuned.pkl',
@@ -36,10 +37,11 @@ model_files = {
 def run_fly():
     df = pd.read_csv(PATH_TO_SAVE_STATIC)
     
-    x = df.drop(['Malware', 'MalFamily'], axis=1)
+    x = df.drop(['Malware'], axis=1)
     y = df['Malware']
 
-    #show_data(x, y)
+    if SHOW_DATA:
+        show_data(x, y)
 
     x = x.drop(['nr_permissions', 'normal', 'dangerous'], axis=1)
 
@@ -51,6 +53,9 @@ def run_fly():
     # 1    40850
     # 0    36480
     # Meaning we have 52.8% actual malware and 47.2%  benign apps. This is perfect as we almost have 50/50 balance.
+
+    # Remove correlated features
+    x = remove_correlated_features(x, threshold=0.8)
 
     # Split the data by 70%/15%/15% 
     x_train, validation_x, y_train, validation_y = train_test_split(x, y, test_size=0.3, random_state=RANDOM_STATE, stratify=y, shuffle=True) # IMPORTANT: We need to shuffle the data
@@ -74,7 +79,7 @@ def run_fly():
     # x_train, x_val, x_test = apply_pca(x, x_train, x_val, x_test)
 
     # Find the best parameters for each model
-    # tune_all_models(x_train, y_train, cv=5, n_jobs=-1, verbose=2)
+    # tune_all_models(x_train, y_train)
     
     # Train and evaluate models
     # model_results = train_and_evaluate_models(x_train, y_train, x_val, y_val)
@@ -153,7 +158,7 @@ def train_and_evaluate_models(x_train, y_train, x_val, y_val):
         [RandomForestClassifier(n_estimators=120, random_state=RANDOM_STATE, max_depth=30, min_samples_split=2, min_samples_leaf=1), "Random Forest"],
         [xgb.XGBClassifier(objective="binary:logistic", random_state=RANDOM_STATE, colsample_bytree=0.3, learning_rate=0.3, max_depth=9, n_estimators=300), "XGBoost"],
         [lgb.LGBMClassifier(random_state=RANDOM_STATE, learning_rate=0.3, max_depth=-1, n_estimators=400, num_leaves=100), "LightGBM"],
-        [SVM(kernel='rbf', random_state=RANDOM_STATE, C=10, gamma=0.1), "Support Vector Machine"],
+        [SVM(kernel='rbf', random_state=RANDOM_STATE, C=10, gamma=0.1, probability=False), "Support Vector Machine"],
         [AdaBoostClassifier(n_estimators=200, random_state=RANDOM_STATE, learning_rate=1), "AdaBoost"],
         [MLPClassifier(hidden_layer_sizes=(200, 150, 75), max_iter=100, random_state=RANDOM_STATE, alpha=0.00085, activation='relu', early_stopping=True), "Neural Network"],
     ]
@@ -279,7 +284,7 @@ def show_data(x, y):
     # We could probably drop ACCES_FINE_LOCATION 
     # And we could probably just use dangerous and drop nr_permissions
 
-def tune_all_models(x_train, y_train, cv=5, n_jobs=-1, verbose=1): 
+def tune_all_models(x_train, y_train, cv=5, n_jobs=-1, verbose=2): 
     # NOTE: This function works only because we do shuffle=True in train_test_split. Using it with the whole datasets REQUIRES shuffling!
 
     # Define models and their parameters that we are trying to tune
@@ -381,3 +386,24 @@ def tune_all_models(x_train, y_train, cv=5, n_jobs=-1, verbose=1):
     
     for model in best_models.values():
         print(model)
+
+
+def remove_correlated_features(x, threshold=0.95):
+    # Calculate correlation matrix on training data
+    corr_matrix = x.corr().abs()
+    
+    # Select upper triangle of correlation matrix
+    upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
+    
+    # Find features with correlation greater than threshold
+    to_drop = [column for column in upper.columns if any(upper[column] > threshold)]
+    
+    print(f"\nRemoving {len(to_drop)} highly correlated features (threshold={threshold}):")
+    print(to_drop)
+    
+    # Drop from all sets
+    x = x.drop(columns=to_drop)
+    
+    print(f"Remaining features: {x.shape[1]}")
+    
+    return x

@@ -69,11 +69,9 @@ def refine_data():
 
 
     static_cols = pd.read_csv(STATIC_HEADERS_FILE).columns.tolist()
-    dynamic_cols = pd.read_csv(DYNAMIC_HEADERS_FILE).columns.tolist()
     removed_cols = pd.read_csv(REMOVED_HEADERS_FILE).columns.tolist()
 
     static_cols = [c for c in static_cols if c not in deleted_cols]
-    dynamic_cols = [c for c in dynamic_cols if c not in deleted_cols]
 
     # Remove columns we definatelly won't use
     combined = combined.drop(columns = removed_cols)
@@ -84,7 +82,7 @@ def refine_data():
     static_dataset.to_csv(PATH_TO_SAVE_STATIC, index=False)
     print(f"Static data saved to: {PATH_TO_SAVE_STATIC}")
 
-    # Save dynamic data  
-    dynamic_dataset = combined[dynamic_cols]
+    # Save dynamic data     
+    dynamic_dataset = combined
     dynamic_dataset.to_csv(PATH_TO_SAVE_DYNAMIC, index=False)
     print(f"Dynamic data saved to: {PATH_TO_SAVE_DYNAMIC}")
