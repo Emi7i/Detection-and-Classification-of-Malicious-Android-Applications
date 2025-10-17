@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 
 LEGIT_DATA = "data/raw/real_legitimate_v1.csv"

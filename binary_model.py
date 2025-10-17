@@ -24,13 +24,13 @@ SHOW_GRAPS = False
 RANDOM_STATE = 42
 
 model_files = {
-    'Logistic Regression': 'models/logistic_regression_tuned.pkl',
-    'Random Forest': 'models/random_forest_tuned.pkl',
-    'XGBoost': 'models/xgboost_tuned.pkl',
-    'LightGBM': 'models/lightgbm_tuned.pkl',
-    'SVM': 'models/support_vector_machine_tuned.pkl',
-    'AdaBoost': 'models/adaboost_tuned.pkl',
-    'Neural Network': 'models/neural_network_tuned.pkl'
+    'Logistic Regression': 'models/Fly/logistic_regression_tuned.pkl',
+    'Random Forest': 'models/Fly/random_forest_tuned.pkl',
+    'XGBoost': 'models/Fly/xgboost_tuned.pkl',
+    'LightGBM': 'models/Fly/lightgbm_tuned.pkl',
+    'SVM': 'models/Fly/support_vector_machine_tuned.pkl',
+    'AdaBoost': 'models/Fly/adaboost_tuned.pkl',
+    'Neural Network': 'models/Fly/neural_network_tuned.pkl'
 }
 
 def run_fly():
@@ -93,15 +93,22 @@ def run_fly():
     
 
 def load_and_test_models(x_test, y_test, SHOW_GRAPS=True):    
+    # Select which models to load
+    enabled_models = {
+        'Logistic Regression': False,
+        'Random Forest': False,
+        'XGBoost': False,
+        'LightGBM': True,  # Only this one is enabled (The best one)
+        'SVM': False,
+        'AdaBoost': False,
+        'Neural Network': False
+    }
+
     # Load models
     models = [
-        #[joblib.load('models/logistic_regression_tuned.pkl'), "Logistic Regression"],
-        #[joblib.load('models/random_forest_tuned.pkl'), "Random Forest"],
-        #[joblib.load('models/xgboost_tuned.pkl'), "XGBoost"],
-        [joblib.load('models/lightgbm_tuned.pkl'), "LightGBM"],
-        #[joblib.load('models/support_vector_machine_tuned.pkl'), "Support Vector Machine"],
-        #[joblib.load('models/adaboost_tuned.pkl'), "AdaBoost"],
-        #[joblib.load('models/neural_network_tuned.pkl'), "Neural Network"],
+        [joblib.load(model_files[name]), name] 
+        for name, enabled in enabled_models.items() 
+        if enabled
     ]
 
     model_results = []
