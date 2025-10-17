@@ -178,8 +178,22 @@ I will now try to manually go throught the models and fine-tune them to see if w
     LightGBM                  98.61%      98.77%      98.60%      98.68%
     Neural Network            97.98%      98.25%      97.93%      98.09%
 ```
-
-> Meaning LightGBM wins!
+However, in practice, If we use `total_perm` instead of `dangerous` and `normal`, we get: 
+```c
+    ======================================================================
+    MODEL COMPARISON
+    ======================================================================
+    Model                  Accuracy     Precision    Recall       F1-Score
+    ----------------------------------------------------------------------
+    Logistic Regression       93.78%      95.44%      92.64%      94.02%
+    Random Forest             98.16%      98.33%      98.17%      98.25%
+    XGBoost                   98.39%      98.62%      98.32%      98.47%
+    LightGBM                  98.55%      98.74%      98.51%      98.63%
+    Support Vector Machine    97.43%      97.65%      97.49%      97.57%
+    AdaBoost                  94.53%      95.18%      94.42%      94.80%
+    Neural Network            98.02%      98.06%      98.19%      98.12%
+```
+> But still, LightGBM wins!
 
 ### Testing the final model:
 ```c
@@ -189,3 +203,8 @@ I will now try to manually go throught the models and fine-tune them to see if w
     LightGBM                  98.37%      98.82%      98.09%      98.45%
 ```
 [Confusion Matrix](Binary_res.png)
+
+
+## Dragon model (classification, dynamic)
+
+- [ ] Load data

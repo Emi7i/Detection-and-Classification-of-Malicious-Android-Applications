@@ -36,12 +36,12 @@ model_files = {
 def run_fly():
     df = pd.read_csv(PATH_TO_SAVE_STATIC)
     
-    x = df.drop(['Malware'], axis=1)
+    x = df.drop(['Malware', 'MalFamily'], axis=1)
     y = df['Malware']
 
     #show_data(x, y)
 
-    x = x.drop(['total_perm', 'nr_permissions'], axis=1)
+    x = x.drop(['nr_permissions', 'normal', 'dangerous'], axis=1)
 
     # First lets start with Random Forest, XGBoost/LightGBM and Logical Regression
 
@@ -86,10 +86,10 @@ def run_fly():
     print("\n" + "="*70)
     print("MODEL COMPARISON")
     print("="*70)
-    print(f"{'Model':<24} {'Accuracy':<12} {'Precision':<12} {'Recall':<12} {'F1-Score':<12}")
+    print(f"{'Model':<22} {'Accuracy':<12} {'Precision':<12} {'Recall':<12} {'F1-Score':<12}")
     print("-"*70)
     for name, acc, prec, rec, f1 in model_results:
-        print(f"{name:<20} {acc:>10.2f}% {prec:>10.2f}% {rec:>10.2f}% {f1:>10.2f}%")
+        print(f"{name:<22} {acc:>10.2f}% {prec:>10.2f}% {rec:>10.2f}% {f1:>10.2f}%")
     
 
 def load_and_test_models(x_test, y_test, SHOW_GRAPS=True):    
@@ -196,8 +196,8 @@ def train_and_evaluate_models(x_train, y_train, x_val, y_val):
         model_results.append([name, acc, precision, recall, f1])
 
         # Save the model!!!
-        model_filename = f"models/{name.replace(' ', '_').lower()}_tuned.pkl"
-        os.makedirs('models', exist_ok=True)
+        model_filename = f"models/Fly/{name.replace(' ', '_').lower()}_tuned.pkl"
+        os.makedirs('models/Fly', exist_ok=True)
         joblib.dump(model, model_filename)
         print(f"Model saved to: {model_filename}")
 
