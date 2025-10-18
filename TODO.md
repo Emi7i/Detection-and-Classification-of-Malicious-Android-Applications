@@ -281,6 +281,25 @@ Fine-tune models:
     [TabNetClassifier(verbose=0, seed=RANDOM_STATE, n_d=32, n_a=32, n_steps=3), "TabNet"],
 ```
 
+- [x] Try using SMOTE to balance the models
+- [x] Try adding class_weight='balanced' everywhere
+
+```c
+    ======================================================================
+    MODEL COMPARISON
+    ======================================================================
+    Model                  Accuracy     Precision    Recall       F1-Score
+    ----------------------------------------------------------------------
+    Logistic Regression         67.67%      72.45%      67.67%      68.28%
+    Random Forest               84.63%      84.74%      84.63%      84.39%
+    XGBoost                     84.48%      85.15%      84.48%      84.70%
+    LightGBM                    86.14%      86.50%      86.14%      86.13%
+    Support Vector Machine      78.85%      82.07%      78.85%      79.70%
+    AdaBoost                    44.08%      54.65%      44.08%      45.42%
+    TabNet                      75.53%      80.36%      75.53%      76.84%
+```
+There is no improvement. 
+
 ### Results
 After fine-tuning the models, I got: 
 ```c
@@ -290,7 +309,7 @@ After fine-tuning the models, I got:
     Model                  Accuracy     Precision    Recall       F1-Score
     ----------------------------------------------------------------------
     Logistic Regression         74.80%      73.43%      74.80%      73.56%
-    Random Forest               85.10%      85.23%      85.10%      84.52%
+    Random Forest               84.98%      84.95%      84.98%      84.44%
     XGBoost                     85.54%      85.66%      85.54%      85.32%
     LightGBM                    86.14%      86.50%      86.14%      86.13%
     Support Vector Machine      83.14%      83.07%      83.14%      82.87%

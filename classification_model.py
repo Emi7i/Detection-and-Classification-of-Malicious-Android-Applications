@@ -56,7 +56,7 @@ def run_dragon():
     x = find_useful_columns(x, binary_cols, numeric_cols)
 
     if SHOW_DATA:
-        show_data(x, y_encoded)
+        show_data(x, y_encoded, 'MalFamily')
         print(df['MalFamily'].value_counts())
         # Here we get:
         #     MalFamily
@@ -83,13 +83,13 @@ def run_dragon():
     # x_train, x_val, x_test = apply_pca(x, x_train, x_val, x_test)
 
     # Train and evaluate models
-    # model_results = train_and_evaluate_models(x_train, y_train, x_val, y_val, labels=le.classes_)
+    model_results = train_and_evaluate_models(x_train, y_train, x_val, y_val, labels=le.classes_)
 
     # Tune models
     # tune_all_models(x_train, y_train)
 
     # Load and evaluate pre-tuned models
-    model_results = load_and_test_models(x_val, y_val, labels=le.classes_, SHOW_GRAPS=False)
+    # model_results = load_and_test_models(x_val, y_val, labels=le.classes_, SHOW_GRAPS=False)
 
     # Print summary comparison
     print("\n" + "="*70)

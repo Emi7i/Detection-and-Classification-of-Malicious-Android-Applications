@@ -17,10 +17,7 @@ def refine_data():
     # Some of the families are incorectly identified, so I will just set all of them to Benign
     legit_data['MalFamily'] = 'Benign'
 
-    print("-----------LEGIT DATASET-----------")
-    print(legit_data.head())
-    print("-----------MALWARE DATASET-----------")
-    print(malware_data.head())
+    # show_data_info()
 
     combined = pd.concat([legit_data, malware_data], ignore_index=True)
     print("-----------COMBINED DATASET-----------")
@@ -86,3 +83,24 @@ def refine_data():
     dynamic_dataset = combined
     dynamic_dataset.to_csv(PATH_TO_SAVE_DYNAMIC, index=False)
     print(f"Dynamic data saved to: {PATH_TO_SAVE_DYNAMIC}")
+
+
+def show_data_info():
+    legit_data = pd.read_csv(LEGIT_DATA)
+    malware_data = pd.read_csv(MALWARE_DATA)
+
+    print("-----------LEGIT DATASET-----------")
+    print(legit_data.head())
+    print(legit_data.shape)
+    print("-----------MALWARE DATASET-----------")
+    print(malware_data.head())
+    print(malware_data.shape)
+
+
+def print_columns():
+    df = pd.read_csv(PATH_TO_SAVE_DYNAMIC)
+
+    output = ""
+    for col in df.columns:
+        output += f"{col}, "
+    print(output)

@@ -100,13 +100,13 @@ def run_fly():
 def load_and_test_models(x_test, y_test, SHOW_GRAPS=True):    
     # Select which models to load
     enabled_models = {
-        'Logistic Regression': False,
-        'Random Forest': False,
-        'XGBoost': False,
-        'LightGBM': True,  # Only this one is enabled (The best one)
-        'SVM': False,
-        'AdaBoost': False,
-        'Neural Network': False
+        'Logistic Regression': True,
+        'Random Forest': True,
+        'XGBoost': True,
+        'LightGBM': True, 
+        'SVM': True,
+        'AdaBoost': True,
+        'Neural Network': True
     }
 
     # Load models
@@ -120,7 +120,7 @@ def load_and_test_models(x_test, y_test, SHOW_GRAPS=True):
 
     for model, name in models:
         print(f"\n{'='*50}")
-        print(f"Training: {name}")
+        print(f"Testing: {name}")
         print('='*50)
         
         # Predict on validation set
@@ -157,7 +157,7 @@ def train_and_evaluate_models(x_train, y_train, x_val, y_val):
         [LogisticRegression(random_state=RANDOM_STATE, max_iter=10000, C=0.1, penalty='l2', solver='lbfgs'), "Logistic Regression"], # Increasing the max_iter above 10000 does not improve the results much
         [RandomForestClassifier(n_estimators=120, random_state=RANDOM_STATE, max_depth=30, min_samples_split=2, min_samples_leaf=1), "Random Forest"],
         [xgb.XGBClassifier(objective="binary:logistic", random_state=RANDOM_STATE, colsample_bytree=0.3, learning_rate=0.3, max_depth=9, n_estimators=300), "XGBoost"],
-        [lgb.LGBMClassifier(random_state=RANDOM_STATE, learning_rate=0.3, max_depth=-1, n_estimators=400, num_leaves=100), "LightGBM"],
+        [lgb.LGBMClassifier(random_state=RANDOM_STATE, learning_rate=0.3, max_depth=-1, n_estimators=400, num_leaves=100, verbose=-1), "LightGBM"],
         [SVM(kernel='rbf', random_state=RANDOM_STATE, C=10, gamma=0.1, probability=False), "Support Vector Machine"],
         [AdaBoostClassifier(n_estimators=200, random_state=RANDOM_STATE, learning_rate=1), "AdaBoost"],
         [MLPClassifier(hidden_layer_sizes=(200, 150, 75), max_iter=100, random_state=RANDOM_STATE, alpha=0.00085, activation='relu', early_stopping=True), "Neural Network"],
@@ -253,20 +253,20 @@ def apply_pca(x, x_train, x_val, x_test):
     return x_train, x_val, x_test
 
 
-def show_data(x, y):
+def show_data(x, y, target_name='Malware'):
     # Combine x and y for correlation calculation
     data_for_viz = x.copy()
-    data_for_viz['Malware'] = y
+    data_for_viz[target_name] = y
 
     # Calculate correlation with target
-    correlations = data_for_viz.corr()['Malware'].abs().sort_values(ascending=False)
+    correlations = data_for_viz.corr()[target_name].abs().sort_values(ascending=False)
 
-    print("Correlation with Malware:")
-    print(correlations.drop('Malware'))
+    print(f"Correlation with {target_name}:")
+    print(correlations.drop(target_name))
 
     # Correlation heatmap
-    features = correlations.drop('Malware').index.tolist()
-    features.append('Malware')
+    features = correlations.drop(target_name).index.tolist()
+    features.append(target_name)
 
     corr_matrix = data_for_viz[features].corr()
 
