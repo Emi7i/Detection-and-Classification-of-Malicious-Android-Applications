@@ -1,11 +1,11 @@
 # Detection-and-Classification-of-Malicious-Android-Applications
 
-A machine learning project for detecting and classifying malicious Android applications using a combination of static and dynamic analysis features.
+This is a machine learning project for detecting and classifying malicious Android applications using a combination of static and dynamic analysis features.
 
 ## DISCLAMER: This is a Work In Progress!
 
-I intend to refine the documentation, code and and perhaps improve some model parameters. 
-After this, I would like to expand the dataset to capture call sequences, and use RNN/LSTM models.
+I intend to refine the documentation and code, and possibly improve some model parameters. 
+After this, I would like to expand the dataset to capture call sequences and use RNN/LSTM models.
 
 ## Project Overview
 
